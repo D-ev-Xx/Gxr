@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DXZ Data Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: #111827;
+            color: #F3F4F6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(90deg, #6366F1, #10B981);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #F3F4F6;
+        }
+
+        .navbar {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+            background: #1F2A44;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .navbar button {
+            padding: 8px 16px;
+            border: none;
+            background: #6366F1;
+            color: #F3F4F6;
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .navbar button.active {
+            background: #10B981;
+            transform: scale(1.05);
+        }
+
+        .navbar button:hover {
+            background: #4F46E5;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 10px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .card {
+            background: #1F2A44;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+        }
+
+        .input-section {
+            margin-bottom: 12px;
+        }
+
+        .card h2 {
+            font-size: 14px;
+            margin-bottom: 6px;
+            color: #10B981;
+        }
+
+        .card h3 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #F3F4F6;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 6px;
+            border: none;
+            border-radius: 5px;
+            background: #374151;
+            color: #F3F4F6;
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 4px #10B981;
+        }
+
+        button {
+            padding: 6px 12px;
+            border: none;
+            background: #6366F1;
+            color: #F3F4F6;
+            font-size: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            margin-right: 5px;
+            margin-top: 8px;
+        }
+
+        button:hover {
+            background: #10B981;
+            transform: scale(1.05);
+        }
+
+        .delete-btn {
+            background: #EF4444;
+        }
+
+        .delete-btn:hover {
+            background: #DC2626;
+        }
+
+        .back-btn {
+            background: #6B7280;
+        }
+
+        .back-btn:hover {
+            background: #4B5563;
+        }
+
+        .success-message {
+            color: #10B981;
+            margin-top: 4px;
+            margin-bottom: 6px;
+            font-size: 12px;
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .error-message {
+            color: #EF4444;
+            margin-top: 4px;
+            margin-bottom: 6px;
+            font-size: 12px;
+            display: none;
+        }
+
+        .data-entry {
+            background: #1F2A44;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .data-section {
+            margin-bottom: 20px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 5px;
+            }
+
+            .card {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .navbar {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .navbar button {
+                width: 100%;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DXZ Data Manager</h1>
+    </div>
+
+    <div class="navbar">
+        <button id="inputPageBtn" class="active">Data Input</button>
+        <button id="displayPageBtn">Saved Data</button>
+    </div>
+
+    <div id="inputPage" class="container">
+        <div class="card">
+            <div class="input-section">
+                <h2>Password Input</h2>
+                <input type="password" id="password" placeholder="Enter Password">
+                <div id="passwordOutput"></div>
+                <div id="passwordSuccess" class="success-message"></div>
+            </div>
+            <div class="input-section">
+                <h2>Facebook UID Extractor</h2>
+                <input type="text" id="fbUrl" placeholder="Enter UID (starts with 61) or Facebook URL">
+                <div id="uidOutput"></div>
+                <div id="uidError" class="error-message"></div>
+            </div>
+            <div class="input-section">
+                <h2>2FA Key Input</h2>
+                <input type="text" id="twoFaKey" placeholder="Enter 2FA Key">
+                <div id="twoFaSuccess" class="success-message"></div>
+            </div>
+            <div class="input-section">
+                <h2>Email Input</h2>
+                <input type="email" id="email" placeholder="Enter Email Address">
+                <div id="emailError" class="error-message"></div>
+                <div id="emailSuccess" class="success-message"></div>
+            </div>
+            <button id="saveData">Save Data</button>
+            <div id="saveSuccess" class="success-message"></div>
+        </div>
+    </div>
+
+    <div id="displayPage" class="container" style="display: none;">
+        <div class="card">
+            <h2>Saved Data</h2>
+            <button id="backBtn" class="back-btn">Back</button>
+            <div id="dataList"></div>
+        </div>
+    </div>
+
+    <script>
+        // Get current date for storage key
+        const currentDate = new Date().toISOString().split('T')[0];
+        const storageKey = `data_${currentDate}`;
+
+        // Load saved input values from localStorage
+        let currentPassword = localStorage.getItem('password') || '';
+        let lastFbUrl = localStorage.getItem('lastFbUrl') || '';
+        let lastTwoFaKey = localStorage.getItem('lastTwoFaKey') || '';
+        let lastEmail = localStorage.getItem('lastEmail') || '';
+
+        const passwordInput = document.getElementById('password');
+        const fbUrlInput = document.getElementById('fbUrl');
+        const twoFaKeyInput = document.getElementById('twoFaKey');
+        const emailInput = document.getElementById('email');
+        const passwordOutput = document.getElementById('passwordOutput');
+        const uidOutput = document.getElementById('uidOutput');
+        const uidError = document.getElementById('uidError');
+        const twoFaSuccess = document.getElementById('twoFaSuccess');
+        const emailError = document.getElementById('emailError');
+        const emailSuccess = document.getElementById('emailSuccess');
+        const saveDataBtn = document.getElementById('saveData');
+        const saveSuccess = document.getElementById('saveSuccess');
+        const dataList = document.getElementById('dataList');
+        const backBtn = document.getElementById('backBtn');
+
+        // Pre-fill input fields with last saved values (except password, which starts empty)
+        passwordInput.value = '';
+        fbUrlInput.value = lastFbUrl;
+        twoFaKeyInput.value = lastTwoFaKey;
+        emailInput.value = lastEmail;
+
+        if (currentPassword) {
+            passwordOutput.textContent = `Current Password: ${currentPassword}`;
+        }
+
+        // Auto-scroll to input field on focus (toward bottom)
+        [passwordInput, fbUrlInput, twoFaKeyInput, emailInput].forEach(input => {
+            input.addEventListener('focus', () => {
+                setTimeout(() => {
+                    input.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                    window.scrollBy(0, 20); // Small offset to position field comfortably
+                }, 100);
+            });
+        });
+
+        // Password Input Handling
+        passwordInput.addEventListener('input', () => {
+            currentPassword = passwordInput.value.trim();
+            passwordOutput.textContent = currentPassword ? `Current Password: ${currentPassword}` : '';
+            localStorage.setItem('password', currentPassword);
+        });
+
+        // Navigation
+        const inputPageBtn = document.getElementById('inputPageBtn');
+        const displayPageBtn = document.getElementById('displayPageBtn');
+        const inputPage = document.getElementById('inputPage');
+        const displayPage = document.getElementById('displayPage');
+
+        inputPageBtn.addEventListener('click', () => {
+            inputPage.style.display = 'block';
+            displayPage.style.display = 'none';
+            inputPageBtn.classList.add('active');
+            displayPageBtn.classList.remove('active');
+        });
+
+        displayPageBtn.addEventListener('click', () => {
+            inputPage.style.display = 'none';
+            displayPage.style.display = 'block';
+            inputPageBtn.classList.remove('active');
+            displayPageBtn.classList.add('active');
+            displayData();
+        });
+
+        backBtn.addEventListener('click', () => {
+            inputPage.style.display = 'block';
+            displayPage.style.display = 'none';
+            inputPageBtn.classList.add('active');
+            displayPageBtn.classList.remove('active');
+        });
+
+        // Facebook UID Extractor
+        fbUrlInput.addEventListener('input', () => {
+            const input = fbUrlInput.value.trim();
+            localStorage.setItem('lastFbUrl', input);
+            const uidDirectMatch = input.match(/^61\d+$/);
+            const uidUrlMatch = input.match(/(?:id=|facebook\.com\/)(\d+)/) || input.match(/facebook\.com\/([a-zA-Z0-9.]+)/);
+            if (uidDirectMatch) {
+                uidOutput.textContent = `UID: ${uidDirectMatch[0]}`;
+                uidError.style.display = 'none';
+            } else if (uidUrlMatch) {
+                uidOutput.textContent = `UID: ${uidUrlMatch[1]}`;
+                uidError.style.display = 'none';
+            } else {
+                uidOutput.textContent = '';
+                uidError.textContent = 'Enter a valid UID (starts with 61) or Facebook URL';
+                uidError.style.display = 'block';
+            }
+        });
+
+        // 2FA Key and Email
+        twoFaKeyInput.addEventListener('input', () => {
+            localStorage.setItem('lastTwoFaKey', twoFaKeyInput.value.trim());
+        });
+
+        emailInput.addEventListener('input', () => {
+            localStorage.setItem('lastEmail', emailInput.value.trim());
+        });
+
+        saveDataBtn.addEventListener('click', () => {
+            const uid = uidOutput.textContent.replace('UID: ', '').trim();
+            const twoFaKey = twoFaKeyInput.value.trim();
+            const email = emailInput.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!uid) {
+                uidError.textContent = 'Enter a valid UID (starts with 61) or Facebook URL';
+                uidError.style.display = 'block';
+                return;
+            }
+
+            if (!emailRegex.test(email)) {
+                emailError.textContent = 'Please enter a valid email';
+                emailError.style.display = 'block';
+                return;
+            }
+
+            if (!currentPassword) {
+                passwordSuccess.textContent = 'Please set a password';
+                passwordSuccess.style.display = 'block';
+                setTimeout(() => passwordSuccess.style.display = 'none', 2000);
+                return;
+            }
+
+            const dataEntry = {
+                uid,
+                password: currentPassword,
+                twoFaKey,
+                email,
+                date: currentDate
+            };
+
+            let data = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            data.push(dataEntry);
+            localStorage.setItem(storageKey, JSON.stringify(data));
+
+            saveSuccess.textContent = 'Data saved successfully!';
+            saveSuccess.style.display = 'block';
+            setTimeout(() => saveSuccess.style.display = 'none', 2000);
+
+            // Clear all fields, including password
+            passwordInput.value = '';
+            fbUrlInput.value = '';
+            twoFaKeyInput.value = '';
+            emailInput.value = '';
+            uidOutput.textContent = '';
+            uidError.style.display = 'none';
+            twoFaSuccess.textContent = '2FA Key saved!';
+            twoFaSuccess.style.display = 'block';
+            setTimeout(() => twoFaSuccess.style.display = 'none', 2000);
+            emailSuccess.textContent = 'Email saved!';
+            emailSuccess.style.display = 'block';
+            setTimeout(() => emailSuccess.style.display = 'none', 2000);
+
+            // Update localStorage for cleared fields
+            localStorage.setItem('lastFbUrl', '');
+            localStorage.setItem('lastTwoFaKey', '');
+            localStorage.setItem('lastEmail', '');
+        });
+
+        // Data Display
+        function displayData() {
+            dataList.innerHTML = '';
+            // Get all keys starting with 'data_' from localStorage
+            const allKeys = Object.keys(localStorage).filter(key => key.startsWith('data_')).sort().reverse();
+            if (allKeys.length === 0) {
+                const noDataDiv = document.createElement('div');
+                noDataDiv.textContent = 'No data available';
+                dataList.appendChild(noDataDiv);
+                return;
+            }
+
+            allKeys.forEach(dateKey => {
+                const data = JSON.parse(localStorage.getItem(dateKey) || '[]');
+                if (data.length === 0) return;
+
+                const dateSection = document.createElement('div');
+                dateSection.className = 'data-section';
+                const dateHeader = document.createElement('h3');
+                dateHeader.textContent = dateKey.replace('data_', '');
+                dateSection.appendChild(dateHeader);
+
+                data.forEach((entry, index) => {
+                    const entryDiv = document.createElement('div');
+                    entryDiv.className = 'data-entry';
+                    entryDiv.innerHTML = `
+                        ${entry.uid}|${entry.password}|${entry.twoFaKey}|${entry.email}
+                        <button class="delete-btn" onclick="deleteEntry('${dateKey}', ${index})">Delete</button>
+                    `;
+                    dateSection.appendChild(entryDiv);
+                });
+
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = 'Download';
+                downloadBtn.onclick = () => downloadData(dateKey);
+
+                const copyBtn = document.createElement('button');
+                copyBtn.textContent = 'Copy';
+                copyBtn.onclick = () => copyData(dateKey);
+
+                const deleteAllBtn = document.createElement('button');
+                deleteAllBtn.className = 'delete-btn';
+                deleteAllBtn.textContent = 'Delete All';
+                deleteAllBtn.onclick = () => deleteAllData(dateKey);
+
+                dateSection.appendChild(downloadBtn);
+                dateSection.appendChild(copyBtn);
+                dateSection.appendChild(deleteAllBtn);
+                dataList.appendChild(dateSection);
+            });
+        }
+
+        window.deleteEntry = function(dateKey, index) {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                let data = JSON.parse(localStorage.getItem(dateKey) || '[]');
+                data.splice(index, 1);
+                if (data.length === 0) {
+                    localStorage.removeItem(dateKey);
+                } else {
+                    localStorage.setItem(dateKey, JSON.stringify(data));
+                }
+                displayData();
+            }
+        };
+
+        function deleteAllData(dateKey) {
+            if (confirm(`Are you sure you want to delete all data for ${dateKey.replace('data_', '')}?`)) {
+                localStorage.removeItem(dateKey);
+                displayData();
+            }
+        }
+
+        function downloadData(dateKey) {
+            try {
+                const data = JSON.parse(localStorage.getItem(dateKey) || '[]');
+                if (!data || data.length === 0) {
+                    alert(`No data available to download for ${dateKey.replace('data_', '')}.`);
+                    return;
+                }
+                const content = data.map(entry => `${entry.uid}|${entry.password}|${entry.twoFaKey}|${entry.email}`).join('\n');
+                if (!content.trim()) {
+                    alert(`Data is empty for ${dateKey.replace('data_', '')}.`);
+                    return;
+                }
+                const encodedContent = encodeURIComponent(content);
+                const dataUrl = `data:text/plain;charset=utf-8,${encodedContent}`;
+                const a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = `${dateKey}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } catch (error) {
+                console.error('Error downloading file:', error);
+                alert('Failed to download file. Try copying data instead.');
+            }
+        }
+
+        function copyData(dateKey) {
+            try {
+                const data = JSON.parse(localStorage.getItem(dateKey) || '[]');
+                if (!data || data.length === 0) {
+                    alert(`No data available to copy for ${dateKey.replace('data_', '')}.`);
+                    return;
+                }
+                const content = data.map(entry => `${entry.uid}|${entry.password}|${entry.twoFaKey}|${entry.email}`).join('\n');
+                if (!content.trim()) {
+                    alert(`Data is empty for ${dateKey.replace('data_', '')}.`);
+                    return;
+                }
+                navigator.clipboard.writeText(content).then(() => {
+                    alert('All data copied to clipboard!');
+                }).catch(() => {
+                    alert('Failed to copy data. Please try again.');
+                });
+            } catch (error) {
+                console.error('Error copying data:', error);
+                alert('Failed to copy data. Please try again.');
+            }
+        }
+
+        // Load saved data on page load
+        displayData();
+
+        // Trigger UID extraction on page load if fbUrlInput has a value
+        if (fbUrlInput.value) {
+            const input = fbUrlInput.value.trim();
+            const uidDirectMatch = input.match(/^61\d+$/);
+            const uidUrlMatch = input.match(/(?:id=|facebook\.com\/)(\d+)/) || input.match(/facebook\.com\/([a-zA-Z0-9.]+)/);
+            if (uidDirectMatch) {
+                uidOutput.textContent = `UID: ${uidDirectMatch[0]}`;
+                uidError.style.display = 'none';
+            } else if (uidUrlMatch) {
+                uidOutput.textContent = `UID: ${uidUrlMatch[1]}`;
+                uidError.style.display = 'none';
+            } else {
+                uidOutput.textContent = '';
+                uidError.textContent = 'Enter a valid UID (starts with 61) or Facebook URL';
+                uidError.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
