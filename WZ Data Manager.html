@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DXZ Data Manager</title>
+    <meta name="description" content="Professional data management system for DXZ">
+    <meta name="theme-color" content="#111827">
+    <meta name="author" content="DXZ Team">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/otpauth/9.1.4/otpauth.umd.min.js"></script>
+    <title>DXZ Data Manager | Professional Data Management System</title>
     <style>
         * {
             margin: 0;
@@ -26,15 +33,19 @@
             width: 100%;
             max-width: 800px;
             text-align: center;
-            padding: 15px;
+            padding: 20px;
             background: linear-gradient(90deg, #6366F1, #10B981);
-            border-radius: 8px;
-            margin-bottom: 10px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .header h1 {
-            font-size: 24px;
+            font-size: 28px;
+            font-weight: 600;
             color: #F3F4F6;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            letter-spacing: 0.5px;
         }
 
         .navbar {
@@ -155,6 +166,24 @@
             background: #4B5563;
         }
 
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .button-group button {
+            margin-top: 0;
+        }
+
+        .clear-btn {
+            background: #6B7280;
+        }
+
+        .clear-btn:hover {
+            background: #4B5563;
+        }
+
         .success-message {
             color: #10B981;
             margin-top: 4px;
@@ -170,6 +199,16 @@
             margin-bottom: 6px;
             font-size: 12px;
             display: none;
+        }
+
+        .totp-code {
+            font-size: 24px;
+            font-weight: 600;
+            color: #10B981;
+            margin: 10px 0;
+            letter-spacing: 2px;
+            text-align: center;
+            min-height: 36px;
         }
 
         .data-entry {
@@ -245,6 +284,12 @@
             <div class="input-section">
                 <h2>2FA Key Input</h2>
                 <input type="text" id="twoFaKey" placeholder="Enter 2FA Key">
+                <div id="twoFaCode" class="totp-code"></div>
+                <div class="button-group">
+                    <button id="copy2FACode" style="display: none;">Copy Code</button>
+                    <button id="clear2FAKey" class="clear-btn">Clear Key</button>
+                    <button id="save2FAKey">Save Key</button>
+                </div>
                 <div id="twoFaSuccess" class="success-message"></div>
             </div>
             <div class="input-section">
@@ -366,9 +411,103 @@
             }
         });
 
-        // 2FA Key and Email
+        // 2FA Key and Code Generation
+        const twoFaCode = document.getElementById('twoFaCode');
+        const copy2FACode = document.getElementById('copy2FACode');
+        let totpInstance = null;
+        let codeUpdateInterval = null;
+
+        function generateTOTPCode(secret) {
+            try {
+                // Clean up the secret key (remove spaces and convert to uppercase)
+                const cleanSecret = secret.replace(/\s/g, '').toUpperCase();
+                
+                // Create new TOTP instance
+                totpInstance = new OTPAuth.TOTP({
+                    algorithm: 'SHA1',
+                    digits: 6,
+                    period: 30,
+                    secret: OTPAuth.Secret.fromBase32(cleanSecret)
+                });
+
+                // Generate and display code
+                const code = totpInstance.generate();
+                twoFaCode.textContent = code;
+                copy2FACode.style.display = 'inline-block';
+
+                // Clear previous interval if it exists
+                if (codeUpdateInterval) clearInterval(codeUpdateInterval);
+
+                // Update code every 30 seconds
+                codeUpdateInterval = setInterval(() => {
+                    const newCode = totpInstance.generate();
+                    twoFaCode.textContent = newCode;
+                }, 30000);
+
+            } catch (error) {
+                twoFaCode.textContent = '';
+                copy2FACode.style.display = 'none';
+                if (codeUpdateInterval) clearInterval(codeUpdateInterval);
+            }
+        }
+
         twoFaKeyInput.addEventListener('input', () => {
-            localStorage.setItem('lastTwoFaKey', twoFaKeyInput.value.trim());
+            const key = twoFaKeyInput.value.trim();
+            localStorage.setItem('lastTwoFaKey', key);
+            if (key.length > 0) {
+                generateTOTPCode(key);
+            } else {
+                twoFaCode.textContent = '';
+                copy2FACode.style.display = 'none';
+                if (codeUpdateInterval) clearInterval(codeUpdateInterval);
+            }
+        });
+
+        copy2FACode.addEventListener('click', () => {
+            const code = twoFaCode.textContent;
+            if (code) {
+                navigator.clipboard.writeText(code).then(() => {
+                    const originalText = copy2FACode.textContent;
+                    copy2FACode.textContent = 'Copied!';
+                    setTimeout(() => {
+                        copy2FACode.textContent = originalText;
+                    }, 1000);
+                });
+            }
+        });
+
+        // Initialize 2FA code if there's a saved key
+        if (lastTwoFaKey) {
+            generateTOTPCode(lastTwoFaKey);
+        }
+
+        // Clear 2FA Key Button
+        const clear2FAKey = document.getElementById('clear2FAKey');
+        clear2FAKey.addEventListener('click', () => {
+            twoFaKeyInput.value = '';
+            twoFaCode.textContent = '';
+            copy2FACode.style.display = 'none';
+            if (codeUpdateInterval) clearInterval(codeUpdateInterval);
+            localStorage.setItem('lastTwoFaKey', '');
+            twoFaSuccess.textContent = '2FA Key cleared!';
+            twoFaSuccess.style.display = 'block';
+            setTimeout(() => twoFaSuccess.style.display = 'none', 2000);
+        });
+
+        // Save 2FA Key Button
+        const save2FAKey = document.getElementById('save2FAKey');
+        save2FAKey.addEventListener('click', () => {
+            const key = twoFaKeyInput.value.trim();
+            if (key) {
+                localStorage.setItem('lastTwoFaKey', key);
+                twoFaSuccess.textContent = '2FA Key saved!';
+                twoFaSuccess.style.display = 'block';
+                setTimeout(() => twoFaSuccess.style.display = 'none', 2000);
+            } else {
+                twoFaSuccess.textContent = 'Please enter a 2FA key first';
+                twoFaSuccess.style.display = 'block';
+                setTimeout(() => twoFaSuccess.style.display = 'none', 2000);
+            }
         });
 
         emailInput.addEventListener('input', () => {
